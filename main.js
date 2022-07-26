@@ -1,83 +1,122 @@
-import './style.css'
 
-import * as THREE from 'https:unpkg.com/three/build/three.module.js';
-import { OrbitControls } from 'https:unpkg.com/three/examples/jsm/OrbitControls.js';
-      import { GLTFLoader } from 'https:unpkg.com/three/examples/jsm/GLTFLoader.js';
-      import { RGBELoader } from 'https:unpkg.com/three/examples/jsm/RGBELoader.js';
 
-      let camera, scene, renderer;
+let camera, scene, renderer;
 
-      init();
-      render();
+init();
+render();
 
-      function init() {
+function init() {
 
-        const container = document.createElement( 'div' );
-        document.body.appendChild( container );
+  const container = document.createElement( 'div' );
+  document.body.appendChild( container );
 
-        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
-        camera.position.set( - 1.8, 0.6, 2.7 );
+  let floorMat;
+  let mesh1;
+  let mesh2;
 
-        scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
+  camera.position.set( - 3.6, 0.6, 5.4 );
 
-        new RGBELoader()
-          .setPath( 'textures/' )
-          .load( 'royal_esplanade_1k.hdr', function ( texture ) {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0xbfe3dd );
 
-            texture.mapping = THREE.EquirectangularReflectionMapping;
+  floorMat = new THREE.MeshStandardMaterial( {
+          color: 0x888888,
+          roughness: 0.5,
+          metalness: 0.5
+        } );
 
-            scene.background = texture;
-            scene.environment = texture;
+  const ambLight = new THREE.AmbientLight( 0x404040, .5 ); // soft white light
+  scene.add( ambLight );
 
-            render();
+  const dirLight = new THREE.DirectionalLight( 0x55505a, 1 );
+  dirLight.position.set( 0, 3, 0 );
+  dirLight.castShadow = true;
+  dirLight.shadow.camera.near = 1;
+  dirLight.shadow.camera.far = 10;
 
-            // model
+  dirLight.shadow.camera.right = 1;
+  dirLight.shadow.camera.left = - 1;
+  dirLight.shadow.camera.top  = 1;
+  dirLight.shadow.camera.bottom = - 1;
 
-            const loader = new GLTFLoader().setPath( 'models/' );
-            loader.load( 'bldg2.gltf', function ( gltf ) {
+  dirLight.shadow.mapSize.width = 1024;
+  dirLight.shadow.mapSize.height = 1024;
+  scene.add( dirLight );
 
-              scene.add( gltf.scene );
+  const floorGeometry = new THREE.PlaneGeometry( 20, 20 );
+  const floorMesh = new THREE.Mesh( floorGeometry, floorMat );
+  floorMesh.receiveShadow = true;
+  floorMesh.rotation.x = - Math.PI / 2.0;
+  scene.add( floorMesh );
 
-              render();
 
-            } );
+  // new THREE.RGBELoader()
+  //   .setPath( 'textures/' )
+  //   .load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
-          } );
+  //     texture.mapping = THREE.EquirectangularReflectionMapping;
 
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1;
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        container.appendChild( renderer.domElement );
+  //     scene.background = texture;
+  //     scene.environment = texture;
 
-        const controls = new OrbitControls( camera, renderer.domElement );
-        controls.addEventListener( 'change', render ); // use if there is no animation loop
-        controls.minDistance = 2;
-        controls.maxDistance = 10;
-        controls.target.set( 0, 0, - 0.2 );
-        controls.update();
+  //     render();
 
-        window.addEventListener( 'resize', onWindowResize );
+  //     // model
 
-      }
+      const loader = new THREE.GLTFLoader().setPath( 'models/' );
+      loader.load( 'bldg2.gltf', function ( gltf ) {
 
-      function onWindowResize() {
-
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        mesh1 = gltf.scene.children[0];
+        mesh2 = gltf.scene.children[1];
+        scene.add( gltf.scene );
+        mesh1.position.set(-5,-.6,1);
+        mesh2.position.set(-5,-.6,1);
+        mesh1.scale.set(5, 5, 5);
+        mesh2.scale.set(5, 5, 5);
 
         render();
 
-      }
+      } );
 
-      //
+    // } );
 
-      function render() {
+  renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = .85;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild( renderer.domElement );
+  renderer.shadowMap.enabled = true;
 
-        renderer.render( scene, camera );
+  const controls = new THREE.OrbitControls( camera, renderer.domElement );
+  controls.addEventListener( 'change', render ); // use if there is no animation loop
+  controls.minDistance = 2;
+  controls.maxDistance = 10;
+  controls.target.set( 0, 0, - 0.2 );
+  controls.update();
 
-      }
+  window.addEventListener( 'resize', onWindowResize );
+
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
+  render();
+
+}
+
+//
+
+function render() {
+
+  renderer.render( scene, camera );
+  console.log(camera.position);
+
+}
