@@ -1,4 +1,5 @@
 let camera, scene, renderer, controls, raycaster;
+
 let container, stats;
 let INTERSECTED;
 let pickableObjs = [];
@@ -107,7 +108,7 @@ function init() {
   pickableObjs.push(plane5);
   scene.add(plane5);
 
-
+ //---ANTHONY PLEASE LOOK AT RGBE LOADER---///
   // new THREE.RGBELoader()
   //   .setPath( 'textures/' )
   //   .load( 'royal_esplanade_1k.hdr', function ( texture ) {
