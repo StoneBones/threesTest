@@ -1,4 +1,4 @@
-
+// --- Please Look at raycaster and rgbe loader --- //
 
 let camera, scene, renderer, raycaster;
 let container, stats;
@@ -104,7 +104,7 @@ function init() {
   plane5.lookAt(camera.position);
   scene.add(plane5);
 
-
+ //---ANTHONY PLEASE LOOK AT RGBE LOADER---///
   // new THREE.RGBELoader()
   //   .setPath( 'textures/' )
   //   .load( 'royal_esplanade_1k.hdr', function ( texture ) {
@@ -197,6 +197,7 @@ function render() {
 
   raycaster.setFromCamera(pointer, camera);
 
+  //---ANTHONY PLEASE LOOK AT RAYCASTER---//
   const intersects = raycaster.intersectObject(scene.children, true);
 
   if (intersects.length > 0){
