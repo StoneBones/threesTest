@@ -1,12 +1,12 @@
-let camera, scene, renderer, raycaster;
+let camera, scene, renderer, controls, raycaster;
 let container, stats;
 let INTERSECTED;
-let pickableObjs;
+let pickableObjs = [];
 let plane1, plane2, plane3, plane4, plane5;
 const pointer = new THREE.Vector2();
 
 init();
-animate();
+// animate(); // Fire the animation loop once the GLTF is loaded to avoid lags
 
 function init() {
 
@@ -68,6 +68,7 @@ function init() {
   plane1.castShadow = true;
   plane1.position.set(1.5, 1.5, 1);
   plane1.lookAt(camera.position);
+  pickableObjs.push(plane1);
   scene.add(plane1);
 
   planeGeo2 = new THREE.PlaneGeometry(1, 1);
@@ -76,6 +77,7 @@ function init() {
   plane1.castShadow = true;
   plane2.position.set(1.5, 1.5, -4);
   plane2.lookAt(camera.position);
+  pickableObjs.push(plane2);
   scene.add(plane2);
 
   planeGeo3 = new THREE.PlaneGeometry(1, 1);
@@ -84,6 +86,7 @@ function init() {
   plane1.castShadow = true;
   plane3.position.set(-4, 1.5, 1);
   plane3.lookAt(camera.position);
+  pickableObjs.push(plane3);
   scene.add(plane3);
 
   planeGeo4 = new THREE.PlaneGeometry(1, 1);
@@ -92,6 +95,7 @@ function init() {
   plane1.castShadow = true;
   plane4.position.set(-5.5, 1.5, -1.5);
   plane4.lookAt(camera.position);
+  pickableObjs.push(plane4);
   scene.add(plane4);
 
   planeGeo5 = new THREE.PlaneGeometry(1, 1);
@@ -100,6 +104,7 @@ function init() {
   plane1.castShadow = true;
   plane5.position.set(-4, 1.5, -4);
   plane5.lookAt(camera.position);
+  pickableObjs.push(plane5);
   scene.add(plane5);
 
 
@@ -127,7 +132,7 @@ function init() {
     mesh1.scale.set(5, 5, 5);
     mesh2.scale.set(5, 5, 5);
 
-    render();
+    animate();
 
   });
 
@@ -143,8 +148,8 @@ function init() {
   container.appendChild(renderer.domElement);
   renderer.shadowMap.enabled = true;
 
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.addEventListener('change', animate); // use if there is no animation loop
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // controls.addEventListener('change', animate); // use if there is no animation loop
   controls.minDistance = 2;
   controls.maxDistance = 15;
   controls.target.set(-1.5, 0.5, -1.5);
@@ -173,8 +178,9 @@ function onWindowResize() {
 }
 
 function onPointerMove(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ( ( event.clientX - rect.left ) / ( rect. right - rect.left ) ) * 2 - 1;
+  pointer.y = - ( ( event.clientY - rect.top ) / ( rect.bottom - rect.top) ) * 2 + 1;
 }
 
 function onDocumentMouseDown(event) {
@@ -188,28 +194,22 @@ function animate() {
 }
 
 function render() {
-
-  renderer.render(scene, camera);
+  controls.update();
 
   raycaster.setFromCamera(pointer, camera);
-
-  const intersects = raycaster.intersectObject(scene.children, true);
-
+  const intersects = raycaster.intersectObjects(pickableObjs, true);
   if (intersects.length > 0) {
-    if (INTERSECTED != intersects[0].object) {
-      let type = intersects[0].object.name.slice(0, 5);
-      if (type === "plane") {
-        if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-        INTERSECTED = intersects[0].object;
-        INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-        INTERSECTED.material.emissive.setHex(0x0000ff);
-      }
-    }
-  } else {
-    if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-    INTERSECTED = null;
+    console.log(intersects);
+    // TODO: you probably just want the first object it hits
+    intersects.map(function(intersected) {
+      const intersectedMaterial = intersected.object.material;
+      intersectedMaterial.emissive.setHex(0x0000ff);
+    });
   }
+
+  // TODO: reset the hex of the other planes
+
+  renderer.render(scene, camera);
 
   /*  plane1.lookAt(camera.position);
     plane2.lookAt(camera.position);
@@ -217,5 +217,6 @@ function render() {
     plane4.lookAt(camera.position);
     plane5.lookAt(camera.position);*/
 
-  console.log(camera.position);
+  // console.log(camera.position);
 }
+
