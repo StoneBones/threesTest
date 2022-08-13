@@ -1,55 +1,54 @@
-// --- Please Look at raycaster and rgbe loader --- //
+let camera, scene, renderer, controls, raycaster;
 
-let camera, scene, renderer, raycaster;
 let container, stats;
 let INTERSECTED;
-let pickableObjs;
+let pickableObjs = [];
 let plane1, plane2, plane3, plane4, plane5;
 const pointer = new THREE.Vector2();
 
 init();
-animate();
+// animate(); // Fire the animation loop once the GLTF is loaded to avoid lags
 
 function init() {
 
-  const container = document.createElement( 'div' );
-  document.body.appendChild( container );
+  const container = document.createElement('div');
+  document.body.appendChild(container);
 
   let floorMat;
   let mesh1, mesh2;
   let planeGeo1, planeGeo2, planeGeo3, planeGeo4, planeGeo5;
 
 
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 200 );
-  camera.position.set( - 6, 1.6, 5.4 );
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 200);
+  camera.position.set(- 6, 1.6, 5.4);
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color( 0xbfe3dd );
+  scene.background = new THREE.Color(0xbfe3dd);
 
-  floorMat = new THREE.MeshStandardMaterial( {
-          color: 0x888888,
-          roughness: 0.5,
-          metalness: 0.5
-        } );
+  floorMat = new THREE.MeshStandardMaterial({
+    color: 0x888888,
+    roughness: 0.5,
+    metalness: 0.5
+  });
 
-  const ambLight = new THREE.AmbientLight( 0xe0e0e0, .5 ); // soft white light
-  scene.add( ambLight );
+  const ambLight = new THREE.AmbientLight(0xe0e0e0, .5); // soft white light
+  scene.add(ambLight);
 
-  const dirLight = new THREE.DirectionalLight( 0xe0e0e0, 1 );
-  dirLight.position.set( 0, 3, 0 );
+  const dirLight = new THREE.DirectionalLight(0xe0e0e0, 1);
+  dirLight.position.set(0, 3, 0);
   dirLight.castShadow = true;
   dirLight.shadow.camera.near = .5;
   dirLight.shadow.camera.far = 500;
 
   dirLight.shadow.mapSize.width = 1024;
   dirLight.shadow.mapSize.height = 1024;
-  scene.add( dirLight );
+  scene.add(dirLight);
 
-  const floorGeometry = new THREE.PlaneGeometry( 20, 20 );
-  const floorMesh = new THREE.Mesh( floorGeometry, floorMat );
+  const floorGeometry = new THREE.PlaneGeometry(20, 20);
+  const floorMesh = new THREE.Mesh(floorGeometry, floorMat);
   floorMesh.receiveShadow = true;
   floorMesh.rotation.x = - Math.PI / 2.0;
-  scene.add( floorMesh );
+  scene.add(floorMesh);
 
   const planeTex1 = new THREE.TextureLoader().load('textures/icon1.jpg');
   const planeTex2 = new THREE.TextureLoader().load('textures/icon2.jpg');
@@ -57,11 +56,11 @@ function init() {
   const planeTex4 = new THREE.TextureLoader().load('textures/icon4.jpg');
   const planeTex5 = new THREE.TextureLoader().load('textures/icon5.jpg');
 
-  const planeMat1 = new THREE.MeshStandardMaterial({map: planeTex1});
-  const planeMat2 = new THREE.MeshStandardMaterial({map: planeTex2});
-  const planeMat3 = new THREE.MeshStandardMaterial({map: planeTex3});
-  const planeMat4 = new THREE.MeshStandardMaterial({map: planeTex4});
-  const planeMat5 = new THREE.MeshStandardMaterial({map: planeTex5});
+  const planeMat1 = new THREE.MeshStandardMaterial({ map: planeTex1 });
+  const planeMat2 = new THREE.MeshStandardMaterial({ map: planeTex2 });
+  const planeMat3 = new THREE.MeshStandardMaterial({ map: planeTex3 });
+  const planeMat4 = new THREE.MeshStandardMaterial({ map: planeTex4 });
+  const planeMat5 = new THREE.MeshStandardMaterial({ map: planeTex5 });
 
 
   planeGeo1 = new THREE.PlaneGeometry(1, 1);
@@ -70,6 +69,7 @@ function init() {
   plane1.castShadow = true;
   plane1.position.set(1.5, 1.5, 1);
   plane1.lookAt(camera.position);
+  pickableObjs.push(plane1);
   scene.add(plane1);
 
   planeGeo2 = new THREE.PlaneGeometry(1, 1);
@@ -78,6 +78,7 @@ function init() {
   plane1.castShadow = true;
   plane2.position.set(1.5, 1.5, -4);
   plane2.lookAt(camera.position);
+  pickableObjs.push(plane2);
   scene.add(plane2);
 
   planeGeo3 = new THREE.PlaneGeometry(1, 1);
@@ -86,6 +87,7 @@ function init() {
   plane1.castShadow = true;
   plane3.position.set(-4, 1.5, 1);
   plane3.lookAt(camera.position);
+  pickableObjs.push(plane3);
   scene.add(plane3);
 
   planeGeo4 = new THREE.PlaneGeometry(1, 1);
@@ -94,6 +96,7 @@ function init() {
   plane1.castShadow = true;
   plane4.position.set(-5.5, 1.5, -1.5);
   plane4.lookAt(camera.position);
+  pickableObjs.push(plane4);
   scene.add(plane4);
 
   planeGeo5 = new THREE.PlaneGeometry(1, 1);
@@ -102,6 +105,7 @@ function init() {
   plane1.castShadow = true;
   plane5.position.set(-4, 1.5, -4);
   plane5.lookAt(camera.position);
+  pickableObjs.push(plane5);
   scene.add(plane5);
 
  //---ANTHONY PLEASE LOOK AT RGBE LOADER---///
@@ -116,37 +120,37 @@ function init() {
 
   //     render();
 
-      // model
+  // model
 
-      const loader = new THREE.GLTFLoader().setPath( 'models/' );
-      loader.load( 'bldg2.gltf', function ( gltf ) {
+  const loader = new THREE.GLTFLoader().setPath('models/');
+  loader.load('bldg2.gltf', function (gltf) {
 
-        mesh1 = gltf.scene.children[0];
-        mesh2 = gltf.scene.children[1];
-        scene.add( gltf.scene );
-        mesh1.position.set(-5,-.6,1);
-        mesh2.position.set(-5,-.6,1);
-        mesh1.scale.set(5, 5, 5);
-        mesh2.scale.set(5, 5, 5);
+    mesh1 = gltf.scene.children[0];
+    mesh2 = gltf.scene.children[1];
+    scene.add(gltf.scene);
+    mesh1.position.set(-5, -.6, 1);
+    mesh2.position.set(-5, -.6, 1);
+    mesh1.scale.set(5, 5, 5);
+    mesh2.scale.set(5, 5, 5);
 
-        render();
+    animate();
 
-      } );
+  });
 
-     //} );
+  //} );
 
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
-  renderer.setPixelRatio( window.devicePixelRatio );
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
   container.appendChild(renderer.domElement);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = .75;
   renderer.outputEncoding = THREE.sRGBEncoding;
-  container.appendChild( renderer.domElement );
+  container.appendChild(renderer.domElement);
   renderer.shadowMap.enabled = true;
 
-  const controls = new THREE.OrbitControls( camera, renderer.domElement );
-  controls.addEventListener( 'change', animate ); // use if there is no animation loop
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // controls.addEventListener('change', animate); // use if there is no animation loop
   controls.minDistance = 2;
   controls.maxDistance = 15;
   controls.target.set(-1.5, 0.5, -1.5);
@@ -158,8 +162,8 @@ function init() {
   //stats = new Stats();
   //container.appendChild(stats.dom);
 
-  window.addEventListener( 'resize', onWindowResize );
-  document.addEventListener( 'mousemove', onPointerMove );
+  window.addEventListener('resize', onWindowResize);
+  document.addEventListener('mousemove', onPointerMove);
   document.addEventListener('mousedown', onDocumentMouseDown, false);
 }
 
@@ -168,64 +172,52 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
   render();
 
 }
 
-function onPointerMove( event ) {
+function onPointerMove(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ( ( event.clientX - rect.left ) / ( rect. right - rect.left ) ) * 2 - 1;
+  pointer.y = - ( ( event.clientY - rect.top ) / ( rect.bottom - rect.top) ) * 2 + 1;
+}
 
-        pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+function onDocumentMouseDown(event) {
 
-      }
+}
 
-      function onDocumentMouseDown(event){
-
-      }
-
-function animate(){
-  requestAnimationFrame( animate );
+function animate() {
+  requestAnimationFrame(animate);
   render();
   //stats.update;
 }
 
 function render() {
-
-  renderer.render( scene, camera );
+  controls.update();
 
   raycaster.setFromCamera(pointer, camera);
-
-  //---ANTHONY PLEASE LOOK AT RAYCASTER---//
-  const intersects = raycaster.intersectObject(scene.children, true);
-
-  if (intersects.length > 0){
-    if (INTERSECTED != intersects[0].object){
-      let type = intersects[0].object.name.slice(0,5);
-      if (type === "plane"){
-        if(INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-        INTERSECTED = intersects[0].object;
-        INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-        INTERSECTED.material.emissive.setHex(0x0000ff);
-      }
-    }
-  } else{
-    if(INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-    INTERSECTED = null;
+  const intersects = raycaster.intersectObjects(pickableObjs, true);
+  if (intersects.length > 0) {
+    console.log(intersects);
+    // TODO: you probably just want the first object it hits
+    intersects.map(function(intersected) {
+      const intersectedMaterial = intersected.object.material;
+      intersectedMaterial.emissive.setHex(0x0000ff);
+    });
   }
 
-/*  plane1.lookAt(camera.position);
-  plane2.lookAt(camera.position);
-  plane3.lookAt(camera.position);
-  plane4.lookAt(camera.position);
-  plane5.lookAt(camera.position);*/
+  // TODO: reset the hex of the other planes
 
-  console.log(camera.position);
+  renderer.render(scene, camera);
 
+  /*  plane1.lookAt(camera.position);
+    plane2.lookAt(camera.position);
+    plane3.lookAt(camera.position);
+    plane4.lookAt(camera.position);
+    plane5.lookAt(camera.position);*/
 
-
-
-
+  // console.log(camera.position);
 }
+
